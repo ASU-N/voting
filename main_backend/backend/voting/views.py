@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Voter
+from .models import Voter, Candidate, Vote
 from .forms import VoterRegistrationForm
 import cv2
 import face_voting_system
@@ -44,4 +44,26 @@ def face_recognition_view(request):
         except Voter.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Voter ID not found.'})
     
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+@csrf_exempt
+def get_candidates(request):
+    candidates = Candidate.objects.all()
+    candidate_list = [{"id": candidate.id, "name": candidate.name, "party": candidate.party, "image": candidate.image.url} for candidate in candidates]
+    return JsonResponse(candidate_list, safe=False)
+
+
+
+@csrf_exempt
+def cast_vote(request):
+    if request.method == 'POST':
+        candidate_id = request.POST.get('candidate_id')
+        voter_id = request.POST.get('voter_id')
+        encrypted_voter_id = Vote.encrypt_voter_id(voter_id)
+        try:
+            candidate = Candidate.objects.get(id=candidate_id)
+            Vote.objects.create(candidate=candidate, encrypted_voter_id=encrypted_voter_id)
+            return JsonResponse({'success': True, 'message': 'Vote cast successfully!'})
+        except Candidate.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Candidate not found.'})
     return JsonResponse({'success': False, 'message': 'Invalid request method.'})
