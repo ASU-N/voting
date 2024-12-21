@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import './home.css';
 import axios from 'axios';
+import Timer from '../components/timer'; // Adjusted import path
 
 export default function Home() {
     const [candidates, setCandidates] = useState([]);
-    const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+    const [votingEnded, setVotingEnded] = useState(false); // New state to track if voting has ended
 
     useEffect(() => {
         axios.get('http://127.0.0.1:8000/get_candidates/')
@@ -14,31 +15,6 @@ export default function Home() {
             .catch(error => {
                 console.error('Error fetching candidates:', error);
             });
-
-        // Set the end time for the countdown (e.g., 24 hours from now)
-        const endTime = new Date().getTime() + (24 * 60 * 60 * 1000); // 24 hours from now
-
-        const updateTimer = () => {
-            const now = new Date().getTime();
-            const distance = endTime - now;
-
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            setTimeLeft({ hours, minutes, seconds });
-
-            if (distance < 0) {
-                clearInterval(timerInterval);
-                setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
-                alert('Voting has ended!');
-            }
-        };
-
-        const timerInterval = setInterval(updateTimer, 1000);
-
-        // Cleanup timer interval on component unmount
-        return () => clearInterval(timerInterval);
     }, []);
 
     const handleVote = (candidateId) => {
@@ -60,9 +36,7 @@ export default function Home() {
 
     return (
         <div className="votingSection">
-            <div className="countdown">
-                Time left: {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
-            </div>
+            <Timer /> {/* Timer component */}
             {candidates.map(candidate => (
                 <div className="vote" key={candidate.id}>
                     <div className="info">
@@ -72,7 +46,7 @@ export default function Home() {
                         </div>
                         <img src={`http://127.0.0.1:8000${candidate.image}`} alt="Candidate Profile" />
                     </div>
-                    <button onClick={() => handleVote(candidate.id)}>Vote Now</button>
+                    <button onClick={() => handleVote(candidate.id)} disabled={votingEnded}>Vote Now</button>
                 </div>
             ))}
         </div>
