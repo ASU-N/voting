@@ -67,3 +67,17 @@ def cast_vote(request):
         except Candidate.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Candidate not found.'})
     return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+
+
+def get_results(request):
+    candidates = Candidate.objects.all()
+    results = []
+    for candidate in candidates:
+        vote_count = Vote.objects.filter(candidate=candidate).count()
+        results.append({
+            'name': candidate.name,
+            'party': candidate.party,
+            'vote_count': vote_count
+        })
+    return JsonResponse(results, safe=False)
