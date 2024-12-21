@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static  # Ensure this import is included
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('voting.urls')),
-]
+    path('api/', include('voting.urls')), 
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

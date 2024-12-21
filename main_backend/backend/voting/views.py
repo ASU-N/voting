@@ -1,14 +1,25 @@
-import cv2
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Voter
+from .forms import VoterRegistrationForm
+import cv2
 import face_voting_system
+
+@csrf_exempt
+def register(request):
+    if request.method == 'POST':
+        form = VoterRegistrationForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'message': 'Voter registered successfully!'})
+        return JsonResponse({'message': 'Invalid data'}, status=400)
+    return JsonResponse({'message': 'Invalid request method'}, status=405)
 
 @csrf_exempt
 def face_recognition_view(request):
     if request.method == 'POST':
         voter_id = request.POST.get('voter_id')
-        
         try:
             voter = Voter.objects.get(voter_id=voter_id)
             known_image = cv2.imread(voter.image_path)
