@@ -46,7 +46,7 @@ const App = () => {
       <RouterProvider router={router} />
       {/* Render elections data here if needed */}
       <div className="App">
-        <h1>Election Voting</h1>
+        
         <ul>
           {elections.map((election) => (
             <li key={election.id}>{election.name}</li> // Render each election

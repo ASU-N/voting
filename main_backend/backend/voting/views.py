@@ -1,44 +1,36 @@
-from django.shortcuts import render
+import cv2
 from django.http import JsonResponse
-from .models import Election, Candidate, Vote, ElectionResult
-from .serializers import CandidateSerializer, ElectionSerializer
-from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
+from .models import Voter
+import face_voting_system
 
-def home(request):
-    return render(request, 'home.html')
+@csrf_exempt
+def face_recognition_view(request):
+    if request.method == 'POST':
+        voter_id = request.POST.get('voter_id')
+        
+        try:
+            voter = Voter.objects.get(voter_id=voter_id)
+            known_image = cv2.imread(voter.image_path)
+            video_capture = cv2.VideoCapture(0)
+            ret, frame = video_capture.read()
 
+            if not ret:
+                return JsonResponse({'success': False, 'message': 'Failed to capture image from camera.'})
 
-def home(request):
-    elections = Election.objects.filter(is_active=True)
-    return JsonResponse(ElectionSerializer(elections, many=True).data, safe=False)
+            faces = face_voting_system.detect_faces(frame)
+            video_capture.release()
 
-def election_detail(request, election_id):
-    election = Election.objects.get(id=election_id)
-    candidates = Candidate.objects.filter(election=election)
-    return JsonResponse({
-        'election': election.name,
-        'candidates': [CandidateSerializer(candidate).data for candidate in candidates]
-    })
+            if faces:
+                match = face_voting_system.verify_face(known_image, frame)
+                if match:
+                    return JsonResponse({'success': True, 'message': 'Face recognized successfully.'})
+                else:
+                    return JsonResponse({'success': False, 'message': 'Face not recognized.'})
+            else:
+                return JsonResponse({'success': False, 'message': 'No face detected in the image.'})
 
-def vote(request, election_id):
-    # Voting logic here
-    return JsonResponse({'message': 'Vote casted successfully'})
-
-def election_results(request, election_id):
-    election = Election.objects.get(id=election_id)
-    results = ElectionResult.objects.filter(election=election)
-    return JsonResponse({
-        'results': [{'candidate': result.candidate.name, 'vote_count': result.vote_count} for result in results]
-    })
-
-def signup(request):
-    # User registration logic here (can be handled by DRF's serializers)
-    return JsonResponse({'message': 'User registered successfully'})
-
-def user_login(request):
-    # Login logic here (token or session-based login)
-    return JsonResponse({'message': 'User logged in successfully'})
-
-def user_logout(request):
-    # Logout logic here (clearing session or token)
-    return JsonResponse({'message': 'User logged out successfully'})
+        except Voter.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Voter ID not found.'})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
