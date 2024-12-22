@@ -2,7 +2,7 @@ import './login.css';
 import votingImage from '../assets/login.png';
 import { useState, useRef } from 'react';
 import axios from 'axios';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Webcam from 'react-webcam'; // Using react-webcam for demonstration
 
 export default function Login() {
@@ -11,7 +11,7 @@ export default function Login() {
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
     const webcamRef = useRef(null);
-    const history = useHistory();
+    const navigate = useNavigate(); // Replacing useHistory with useNavigate
 
     const handleSubmission = async (event) => {
         event.preventDefault();
@@ -38,7 +38,7 @@ export default function Login() {
                 // Save tokens to local storage
                 localStorage.setItem('accessToken', response.data.access);
                 localStorage.setItem('refreshToken', response.data.refresh);
-                history.push('/home'); // Redirect to /home after successful login
+                navigate('/home'); // Redirect to /home after successful login
             } else {
                 setError(response.data.message);
             }
@@ -72,6 +72,7 @@ export default function Login() {
                                 audio={false}
                                 ref={webcamRef}
                                 screenshotFormat="image/jpeg"
+                                style={{ width: '100%', maxWidth: '320px', maxHeight: '240px' }} // Adjusting the size
                             />
                         </div>
                         {error && <p style={{ color: 'red' }}>{error}</p>}

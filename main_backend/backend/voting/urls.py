@@ -1,5 +1,7 @@
 from django.urls import path
 from .views import register, face_recognition_view, get_candidates, cast_vote, get_results
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
 
 urlpatterns = [
     path('register/', register, name='register'),

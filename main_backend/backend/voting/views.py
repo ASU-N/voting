@@ -1,4 +1,3 @@
-# views.py
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
@@ -27,6 +26,9 @@ def face_recognition_view(request):
         try:
             voter = Voter.objects.get(voter_id=voter_id)
             known_image = cv2.imread(voter.image_path)
+            if known_image is None:
+                return JsonResponse({'success': False, 'message': 'Voter image not found.'})
+                
             video_capture = cv2.VideoCapture(0)
             ret, frame = video_capture.read()
 
@@ -53,6 +55,9 @@ def face_recognition_view(request):
 
         except Voter.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Voter ID not found.'})
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            return JsonResponse({'success': False, 'message': 'An unexpected error occurred.', 'error': str(e)})
     
     return JsonResponse({'success': False, 'message': 'Invalid request method.'})
 
