@@ -3,22 +3,15 @@ import votingImage from '../assets/login.png';
 import { useState, useRef } from 'react';
 import axios from 'axios';
 import { useHistory } from 'react-router-dom';
-// Import yaju's face recognition package here if available
 import Webcam from 'react-webcam'; // Using react-webcam for demonstration
 
-export default function RootLayout() {
+export default function Login() {
     const [votingId, setVotingId] = useState('');
-    const [action, setAction] = useState('register');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
     const webcamRef = useRef(null);
     const history = useHistory();
-
-    const handleToggle = (text) => {
-        setAction(text);
-        console.log('Action:' + text);
-    };
 
     const handleSubmission = async (event) => {
         event.preventDefault();
@@ -34,7 +27,7 @@ export default function RootLayout() {
         formData.append('image', imageSrc);
 
         try {
-            const response = await axios.post('http://127.0.0.1:8000/api/face_recognition/', formData, {
+            const response = await axios.post('http://127.0.0.1:8000/face_recognition/', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -42,6 +35,9 @@ export default function RootLayout() {
             setLoading(false);
             if (response.data.success) {
                 setMessage(response.data.message);
+                // Save tokens to local storage
+                localStorage.setItem('accessToken', response.data.access);
+                localStorage.setItem('refreshToken', response.data.refresh);
                 history.push('/home'); // Redirect to /home after successful login
             } else {
                 setError(response.data.message);
@@ -61,17 +57,20 @@ export default function RootLayout() {
                 </div>
 
                 <form className="form-section" onSubmit={handleSubmission}>
-                    <div className='toggle-button'>
-                        <ToggleButton onToggle={handleToggle} />
-                    </div>
                     <div className='form-info'>
                         <h2>Enter Your Voting ID</h2>
-                        <input type="text" placeholder="Enter your Voting ID here" value={votingId} onChange={({ target }) => setVotingId(target.value)} required />
+                        <input
+                            type="text"
+                            placeholder="Enter your Voting ID here"
+                            value={votingId}
+                            onChange={({ target }) => setVotingId(target.value)}
+                            required
+                        />
                         <div className="webcam-container">
                             {/* Webcam component from face recognition package or react-webcam */}
-                            <Webcam 
-                                audio={false} 
-                                ref={webcamRef} 
+                            <Webcam
+                                audio={false}
+                                ref={webcamRef}
                                 screenshotFormat="image/jpeg"
                             />
                         </div>

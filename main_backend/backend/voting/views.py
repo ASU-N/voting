@@ -1,8 +1,12 @@
+# views.py
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Voter, Candidate, Vote
 from .forms import VoterRegistrationForm
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 import cv2
 import face_voting_system
 
@@ -35,7 +39,13 @@ def face_recognition_view(request):
             if faces:
                 match = face_voting_system.verify_face(known_image, frame)
                 if match:
-                    return JsonResponse({'success': True, 'message': 'Face recognized successfully.'})
+                    refresh = RefreshToken.for_user(voter)
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Face recognized successfully.',
+                        'access': str(refresh.access_token),
+                        'refresh': str(refresh)
+                    })
                 else:
                     return JsonResponse({'success': False, 'message': 'Face not recognized.'})
             else:
@@ -46,14 +56,15 @@ def face_recognition_view(request):
     
     return JsonResponse({'success': False, 'message': 'Invalid request method.'})
 
-@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_candidates(request):
     candidates = Candidate.objects.all()
     candidate_list = [{"id": candidate.id, "name": candidate.name, "party": candidate.party, "image": candidate.image.url} for candidate in candidates]
     return JsonResponse(candidate_list, safe=False)
 
-
-
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @csrf_exempt
 def cast_vote(request):
     if request.method == 'POST':
@@ -68,8 +79,8 @@ def cast_vote(request):
             return JsonResponse({'success': False, 'message': 'Candidate not found.'})
     return JsonResponse({'success': False, 'message': 'Invalid request method.'})
 
-
-
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_results(request):
     candidates = Candidate.objects.all()
     results = []

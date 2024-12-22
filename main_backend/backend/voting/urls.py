@@ -7,4 +7,6 @@ urlpatterns = [
     path('get_candidates/', get_candidates, name='get_candidates'),  # URL for fetching candidates
     path('cast_vote/', cast_vote, name='cast_vote'),
     path('get_results/', get_results, name='get_results'),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh' ),
 ]
