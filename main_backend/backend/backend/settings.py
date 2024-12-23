@@ -32,7 +32,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-AUTH_USER_MODEL = 'voting.CustomUser' 
+# AUTH_USER_MODEL = 'voting.CustomUser' 
 # Application definition
 
 INSTALLED_APPS = [

@@ -6,16 +6,17 @@ import os
 
 class Voter(models.Model):
     voter_id = models.CharField(max_length=100, unique=True)
-    image_path = models.CharField(max_length=255)
+    face_encoding = models.BinaryField()  # Ensure face_encoding field is present
+    face_image = models.ImageField(upload_to='voters/', null=True, blank=True)  # Field to store face image
 
     def __str__(self):
         return self.voter_id
 
     def image_tag(self):
-        if self.image_path:
-            return format_html('<img src="{}" width="150" height="150" />', self.image_path)
+        if self.face_image:
+            return format_html('<img src="{}" width="150" height="150" />', self.face_image.url)
         return "No image"
-    image_tag.short_description = 'Image'
+    image_tag.short_description = 'Face Image'
 
 class Candidate(models.Model):
     name = models.CharField(max_length=100)
@@ -30,11 +31,6 @@ class Candidate(models.Model):
             return format_html('<img src="{}" width="150" height="150" />', self.image.url)
         return "No image"
     image_tag.short_description = 'Image'
-
-from django.db import models
-from cryptography.fernet import Fernet
-import base64
-import os
 
 # Generate a key for encryption
 key = base64.urlsafe_b64encode(os.urandom(32))

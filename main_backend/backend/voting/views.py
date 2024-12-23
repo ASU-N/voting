@@ -6,16 +6,40 @@ from .models import Voter, Candidate, Vote
 from .forms import VoterRegistrationForm
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+import face_recognition
 import cv2
-import face_voting_system
+import face_recognition
+import numpy as np
 
 @csrf_exempt
 def register(request):
     if request.method == 'POST':
         form = VoterRegistrationForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            return JsonResponse({'message': 'Voter registered successfully!'})
+            # Save the voter ID and face image
+            voter = form.save(commit=False)
+            voter.face_image = request.FILES.get('face_image')
+
+            # Capture face encoding
+            video_capture = cv2.VideoCapture(0)
+            ret, frame = video_capture.read()
+
+            if not ret:
+                return JsonResponse({'message': 'Failed to capture image from camera.'}, status=400)
+            
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            face_locations = face_recognition.face_locations(rgb_frame)
+
+            if face_locations:
+                face_encoding = face_recognition.face_encodings(rgb_frame, face_locations)[0]
+                voter.face_encoding = face_encoding.tobytes()  # Save the face encoding
+                voter.save()
+                video_capture.release()
+                return JsonResponse({'message': 'Voter registered successfully!'})
+            else:
+                video_capture.release()
+                return JsonResponse({'message': 'No face detected in the image.'}, status=400)
+
         return JsonResponse({'message': 'Invalid data'}, status=400)
     return JsonResponse({'message': 'Invalid request method'}, status=405)
 
@@ -25,22 +49,24 @@ def face_recognition_view(request):
         voter_id = request.POST.get('voter_id')
         try:
             voter = Voter.objects.get(voter_id=voter_id)
-            known_image = cv2.imread(voter.image_path)
-            if known_image is None:
-                return JsonResponse({'success': False, 'message': 'Voter image not found.'})
-                
+            face_encoding = np.frombuffer(voter.face_encoding, dtype=np.float64)
+
             video_capture = cv2.VideoCapture(0)
             ret, frame = video_capture.read()
 
             if not ret:
                 return JsonResponse({'success': False, 'message': 'Failed to capture image from camera.'})
 
-            faces = face_voting_system.detect_faces(frame)
-            video_capture.release()
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            face_locations = face_recognition.face_locations(rgb_frame)
 
-            if faces:
-                match = face_voting_system.verify_face(known_image, frame)
-                if match:
+            if face_locations:
+                login_face_encoding = face_recognition.face_encodings(rgb_frame, face_locations)[0]
+                match = face_recognition.compare_faces([face_encoding], login_face_encoding)
+
+                video_capture.release()
+
+                if match[0]:
                     refresh = RefreshToken.for_user(voter)
                     return JsonResponse({
                         'success': True,
@@ -51,6 +77,7 @@ def face_recognition_view(request):
                 else:
                     return JsonResponse({'success': False, 'message': 'Face not recognized.'})
             else:
+                video_capture.release()
                 return JsonResponse({'success': False, 'message': 'No face detected in the image.'})
 
         except Voter.DoesNotExist:
