@@ -3,7 +3,7 @@ import votingImage from '../assets/login.png';
 import { useState, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import Webcam from 'react-webcam'; // Using react-webcam for demonstration
+import Webcam from 'react-webcam';
 
 export default function Login() {
     const [votingId, setVotingId] = useState('');
@@ -11,7 +11,7 @@ export default function Login() {
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
     const webcamRef = useRef(null);
-    const navigate = useNavigate(); // Replacing useHistory with useNavigate
+    const navigate = useNavigate();
 
     const handleSubmission = async (event) => {
         event.preventDefault();
@@ -19,15 +19,14 @@ export default function Login() {
         setError('');
         setMessage('');
 
-        // Example of capturing an image using react-webcam
-        const imageSrc = webcamRef.current.getScreenshot(); // Using react-webcam for demonstration
+        const imageSrc = webcamRef.current.getScreenshot();
 
         const formData = new FormData();
         formData.append('voter_id', votingId);
         formData.append('image', imageSrc);
 
         try {
-            const response = await axios.post('http://127.0.0.1:8000/face_recognition/', formData, {
+            const response = await axios.post('http://127.0.0.1:8000/api/ovs/login/', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -35,10 +34,9 @@ export default function Login() {
             setLoading(false);
             if (response.data.success) {
                 setMessage(response.data.message);
-                // Save tokens to local storage
                 localStorage.setItem('accessToken', response.data.access);
                 localStorage.setItem('refreshToken', response.data.refresh);
-                navigate('/home'); // Redirect to /home after successful login
+                navigate('/home');
             } else {
                 setError(response.data.message);
             }
@@ -67,12 +65,11 @@ export default function Login() {
                             required
                         />
                         <div className="webcam-container">
-                            {/* Webcam component from face recognition package or react-webcam */}
                             <Webcam
                                 audio={false}
                                 ref={webcamRef}
                                 screenshotFormat="image/jpeg"
-                                style={{ width: '100%', maxWidth: '320px', maxHeight: '240px' }} // Adjusting the size
+                                style={{ width: '100%', maxWidth: '320px', maxHeight: '240px' }}
                             />
                         </div>
                         {error && <p style={{ color: 'red' }}>{error}</p>}

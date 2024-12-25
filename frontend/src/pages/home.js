@@ -18,7 +18,7 @@ export default function Home() {
     }, []);
 
     const handleVote = (candidateId) => {
-        const voterId = sessionStorage.getItem('voterId'); // Retrieve the actual voter ID from session storage or a similar method
+        const voterId = localStorage.getItem('voterId'); // Retrieve the voter ID from local storage
 
         axios.post('http://127.0.0.1:8000/cast_vote/', { candidate_id: candidateId, voter_id: voterId })
             .then(response => {
@@ -36,7 +36,7 @@ export default function Home() {
 
     return (
         <div className="votingSection">
-            <Timer /> {/* Timer component */}
+            <Timer setVotingEnded={setVotingEnded} /> {/* Pass setVotingEnded to Timer component */}
             {candidates.map(candidate => (
                 <div className="vote" key={candidate.id}>
                     <div className="info">

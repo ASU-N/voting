@@ -20,8 +20,8 @@ class Voter(models.Model):
 
 class Candidate(models.Model):
     name = models.CharField(max_length=100)
-    party = models.CharField(max_length=50)
-    image = models.ImageField(upload_to='candidates/')
+    party = models.CharField(max_length=50, default='Independent')  # Provide a suitable default value
+    image = models.ImageField(upload_to='candidates/', default='default_image_path.jpg')  # Provide a suitable default value
 
     def __str__(self):
         return self.name
@@ -38,7 +38,7 @@ cipher = Fernet(key)
 
 class Vote(models.Model):
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
-    encrypted_voter_id = models.CharField(max_length=256)  # Store encrypted voter ID
+    encrypted_voter_id = models.CharField(max_length=256, default='')  # Provide a suitable default value
     vote_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

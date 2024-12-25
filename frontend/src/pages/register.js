@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './register.css';
 
 const Register = () => {
@@ -9,7 +9,7 @@ const Register = () => {
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const history = useHistory();
+    const navigate = useNavigate(); 
 
     const handleImageChange = (e) => {
         setImage(e.target.files[0]);
@@ -20,10 +20,10 @@ const Register = () => {
         setLoading(true);
         const formData = new FormData();
         formData.append('voter_id', voterId);
-        formData.append('image_path', image);
+        formData.append('image', image);
 
         try {
-            const response = await axios.post('http://127.0.0.1:8000/api/register/', formData, {
+            const response = await axios.post('http://127.0.0.1:8000/api/ovs/register/', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -31,9 +31,8 @@ const Register = () => {
             setLoading(false);
             setMessage(response.data.message);
             setError('');
-            // Redirect to /home after successful registration
             if (response.data.success) {
-                history.push('/home');
+                navigate('/home');
             }
         } catch (error) {
             setError('There was an error processing your request. Please try again.');

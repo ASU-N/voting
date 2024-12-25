@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'voting',
     'corsheaders',
     'rest_framework', 
-    'rest_framework_simplejwt',
+    'oauth2_provider',
+    'Aju.ovs',
 ]
 
 MIDDLEWARE = [
@@ -89,7 +90,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'voting_db',
+        'NAME': 'voting_system',
         'USER': 'root',
         'PASSWORD': 'aarati123',
         'HOST': 'localhost',
@@ -144,13 +145,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
     ),
 }
-from datetime import timedelta 
+#from datetime import timedelta 
 
 
-SIMPLE_JWT = {
+"""SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-}
+}"""
